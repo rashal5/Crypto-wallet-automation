@@ -1,0 +1,5 @@
+# The baseline predictor uses only the Python standard library.
+# Optional extras for loading a trained scikit-learn model (python/model.pkl):
+# scikit-learn==1.5.2
+# joblib==1.4.2
+# numpy==2.1.3

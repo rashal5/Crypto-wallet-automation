@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.prisma/
+coverage/
+*.log
+.env
+prisma/*.db
+prisma/*.db-journal
+python/__pycache__/
+python/model.pkl
+.DS_Store

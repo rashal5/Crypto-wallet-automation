@@ -1,0 +1,131 @@
+// Crypto PAPER trading database.
+// This schema intentionally contains no exchange credentials or order identifiers:
+// the platform only ever stores simulated trades.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Candle {
+  id        Int       @id @default(autoincrement())
+  symbol    String
+  interval  String
+  timestamp DateTime
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float
+
+  indicator Indicator?
+
+  @@unique([symbol, interval, timestamp])
+  @@index([symbol, interval, timestamp])
+  @@map("candles")
+}
+
+model Indicator {
+  id             Int    @id @default(autoincrement())
+  candleId       Int    @unique
+  ema20          Float
+  ema50          Float
+  ema200         Float
+  rsi            Float
+  macd           Float
+  macdSignal     Float
+  macdHistogram  Float
+  atr            Float
+  bbUpper        Float
+  bbLower        Float
+  volumeAverage  Float
+
+  candle Candle @relation(fields: [candleId], references: [id], onDelete: Cascade)
+
+  @@map("indicators")
+}
+
+model Trade {
+  id         Int       @id @default(autoincrement())
+  symbol     String
+  buyPrice   Float
+  sellPrice  Float?
+  quantity   Float
+  investment Float
+  profit     Float?
+  fees       Float     @default(0)
+  netProfit  Float?
+  buyTime    DateTime
+  sellTime   DateTime?
+  status     String    @default("OPEN")
+  reason     String?
+
+  @@index([symbol, status])
+  @@index([buyTime])
+  @@index([sellTime])
+  @@map("trades")
+}
+
+model Wallet {
+  id            Int   @id @default(1)
+  balance       Float @default(0)
+  invested      Float @default(0)
+  available     Float @default(0)
+  totalFees     Float @default(0)
+  totalProfit   Float @default(0)
+  winRate       Float @default(0)
+  totalTrades   Int   @default(0)
+  winningTrades Int   @default(0)
+  losingTrades  Int   @default(0)
+
+  @@map("wallet")
+}
+
+model Prediction {
+  id              Int      @id @default(autoincrement())
+  time            DateTime @default(now())
+  buyProbability  Float
+  sellProbability Float
+  confidence      Float
+  prediction      String
+
+  @@index([time])
+  @@map("predictions")
+}
+
+model Log {
+  id      Int      @id @default(autoincrement())
+  time    DateTime @default(now())
+  module  String
+  message String
+  level   String
+
+  @@index([time])
+  @@map("logs")
+}
+
+model Settings {
+  id                      Int       @id @default(1)
+  startingBalance         Float     @default(80)
+  buyFeePercent           Float     @default(0.1)
+  sellFeePercent          Float     @default(0.1)
+  stopLossPercent         Float     @default(2)
+  takeProfitPercent       Float     @default(3)
+  maxTradeSize            Float     @default(10)
+  paperTradingEnabled     Boolean   @default(true)
+  symbol                  String    @default("BTCUSDT")
+  interval                String    @default("1")
+  rsiBuyThreshold         Float     @default(35)
+  aiConfidenceThreshold   Float     @default(80)
+  strategyName            String    @default("rsi-ema-ai")
+  lastProcessedCandleAt   DateTime?
+  lastCycleAt             DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@map("settings")
+}
