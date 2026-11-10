@@ -117,7 +117,7 @@ model Settings {
   takeProfitPercent       Float     @default(3)
   maxTradeSize            Float     @default(10)
   paperTradingEnabled     Boolean   @default(true)
-  symbol                  String    @default("BTCUSDT")
+  symbol                  String    @default("BTC-USD")
   interval                String    @default("1")
   rsiBuyThreshold         Float     @default(35)
   aiConfidenceThreshold   Float     @default(80)

@@ -41,9 +41,8 @@ export interface AppConfig {
   readonly isProduction: boolean;
   readonly port: number;
   readonly databaseUrl: string;
-  readonly bybit: {
+  readonly coinbase: {
     readonly baseUrl: string;
-    readonly category: string;
     readonly timeoutMs: number;
     readonly retries: number;
     readonly maxKlineLimit: number;
@@ -90,15 +89,14 @@ export const config: AppConfig = Object.freeze({
   isProduction: nodeEnv === "production",
   port: readNumber("PORT", 4000),
   databaseUrl: readString("DATABASE_URL", "file:./dev.db"),
-  bybit: Object.freeze({
-    baseUrl: readString("BYBIT_BASE_URL", "https://api.bybit.com"),
-    category: readString("BYBIT_CATEGORY", "linear"),
-    timeoutMs: readNumber("BYBIT_TIMEOUT_MS", 15_000),
-    retries: readNumber("BYBIT_RETRIES", 3),
-    maxKlineLimit: 1000,
+  coinbase: Object.freeze({
+    baseUrl: readString("COINBASE_BASE_URL", "https://api.coinbase.com"),
+    timeoutMs: readNumber("COINBASE_TIMEOUT_MS", 15_000),
+    retries: readNumber("COINBASE_RETRIES", 3),
+    maxKlineLimit: 350,
   }),
   market: Object.freeze({
-    symbol: readString("SYMBOL", "BTCUSDT"),
+    symbol: readString("SYMBOL", "BTC-USD"),
     interval: readString("INTERVAL", "1"),
     historyCandles: readNumber("HISTORY_CANDLES", 1000),
     lookbackCandles: readNumber("MARKET_LOOKBACK_CANDLES", 400),

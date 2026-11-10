@@ -25,7 +25,7 @@ export function intervalToMilliseconds(interval: string): number {
 }
 
 /**
- * Bybit returns the currently forming candle too. Paper trading must only run on
+ * Exchanges return the currently forming candle too. Paper trading must only run on
  * closed candles, so a candle is considered closed once timestamp + interval <= now.
  */
 export function isCandleClosed(timestamp: Date, interval: string, reference: Date = new Date()): boolean {

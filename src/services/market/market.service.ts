@@ -5,7 +5,7 @@ import type { Candle } from "../../types/domain";
 import { ExternalServiceError } from "../../utils/errors";
 import type { ILogger } from "../../utils/logger";
 import { intervalToMilliseconds, isCandleClosed } from "../../utils/time";
-import type { IBybitClient } from "./bybit.client";
+import type { ICoinbaseClient } from "./coinbase.client";
 
 export interface HistoricalSyncOptions {
   symbol?: string;
@@ -33,23 +33,24 @@ export interface IMarketService {
 
 export class MarketService implements IMarketService {
   constructor(
-    private readonly client: IBybitClient,
+    private readonly client: ICoinbaseClient,
     private readonly candleRepository: ICandleRepository,
     private readonly config: AppConfig,
     private readonly logger: ILogger,
   ) {}
 
   /**
-   * Downloads candles backwards in pages of up to 1000. Bybit has no "offset",
-   * so we walk the `end` cursor and stop when a page cannot provide new data.
+   * Downloads candles backwards in pages (Coinbase caps a page at 350). Coinbase
+   * has no "offset", so we walk the `end` cursor and stop when a page cannot
+   * provide new data.
    */
   async syncHistorical(options: HistoricalSyncOptions = {}): Promise<HistoricalSyncResult> {
     const symbol = options.symbol ?? this.config.market.symbol;
     const interval = options.interval ?? this.config.market.interval;
     const total = Math.max(1, options.total ?? this.config.market.historyCandles);
-    const pageLimit = this.config.bybit.maxKlineLimit;
+    const pageLimit = this.config.coinbase.maxKlineLimit;
 
-    const collected = new Map<number, Awaited<ReturnType<IBybitClient["fetchKlines"]>>[number]>();
+    const collected = new Map<number, Awaited<ReturnType<ICoinbaseClient["fetchKlines"]>>[number]>();
     let remaining = total;
     let end: number | undefined;
     let previousEnd: number | undefined;
@@ -71,8 +72,6 @@ export class MarketService implements IMarketService {
       if (previousEnd !== undefined && nextEnd >= previousEnd) break;
       previousEnd = nextEnd;
       end = nextEnd;
-
-      if (batch.length < limit) break;
     }
 
     const intervalMs = intervalToMilliseconds(interval);
@@ -82,7 +81,7 @@ export class MarketService implements IMarketService {
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
     if (closed.length === 0) {
-      throw new ExternalServiceError(`Bybit returned no closed candles for ${symbol} ${interval}`);
+      throw new ExternalServiceError(`Coinbase returned no closed candles for ${symbol} ${interval}`);
     }
 
     const inserted = await this.candleRepository.upsertMany(

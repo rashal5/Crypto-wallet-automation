@@ -7,7 +7,7 @@ import { BacktestService } from "./services/backtest/backtest.service";
 import { DashboardService } from "./services/dashboard/dashboard.service";
 import { HistoryService } from "./services/history/history.service";
 import { IndicatorService } from "./services/indicators/indicator.service";
-import { BybitClient } from "./services/market/bybit.client";
+import { CoinbaseClient } from "./services/market/coinbase.client";
 import { MarketService } from "./services/market/market.service";
 import { FeeService } from "./services/paperTrading/fee.service";
 import { PaperTradingEngine } from "./services/paperTrading/paper-trading.engine";
@@ -66,14 +66,14 @@ export function createContainer(): AppContainer {
   );
 
   const httpClient = new AxiosHttpClient({
-    baseURL: config.bybit.baseUrl,
-    timeoutMs: config.bybit.timeoutMs,
-    retries: config.bybit.retries,
+    baseURL: config.coinbase.baseUrl,
+    timeoutMs: config.coinbase.timeoutMs,
+    retries: config.coinbase.retries,
     onRetry: (message) => logger.warn(MODULES.MARKET, message),
   });
 
-  const bybitClient = new BybitClient(httpClient, config, logger);
-  const marketService = new MarketService(bybitClient, unitOfWork.repos.candle, config, logger);
+  const coinbaseClient = new CoinbaseClient(httpClient, config, logger);
+  const marketService = new MarketService(coinbaseClient, unitOfWork.repos.candle, config, logger);
   const indicatorService = new IndicatorService(
     unitOfWork.repos.candle,
     unitOfWork.repos.indicator,

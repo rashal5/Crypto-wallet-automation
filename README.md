@@ -2,16 +2,16 @@
 
 Node.js + TypeScript backend for a **paper-only** crypto trading bot.
 
-The server downloads public Bybit klines, computes technical indicators, asks a
+The server downloads public Coinbase klines, computes technical indicators, asks a
 Python predictor for a signal, applies a deterministic RSI/EMA/AI strategy, and
 simulates every trade against an internal SQLite wallet. **It never sends an
 order to an exchange and never accepts exchange API keys.**
 
-- Starting balance: **80 USDT**
-- Trade size: **10 USDT**
+- Starting balance: **80 USD**
+- Trade size: **10 USD**
 - Fees: **0.1%** buy / **0.1%** sell
 - Stop loss: **2%**, take profit: **3%**
-- Default market: **BTCUSDT**, **1m** candles
+- Default market: **BTC-USD**, **1m** candles
 
 ## Stack
 
@@ -25,7 +25,7 @@ order to an exchange and never accepts exchange API keys.**
 ## How it works
 
 ```
-Bybit public REST ──> MarketService ──> candles
+Coinbase public REST ──> MarketService ──> candles
                                       │
                                       ▼
                               IndicatorService
@@ -86,17 +86,17 @@ npm start          # run dist/src/index.js
 ```
 
 On boot the server connects to SQLite, initializes wallet/settings, seeds at
-least 250 candles (or `HISTORY_CANDLES`) from Bybit, rebuilds indicators, then
+least 250 candles (or `HISTORY_CANDLES`) from Coinbase, rebuilds indicators, then
 starts the scheduler when paper trading is enabled.
 
 ### Historical data
 
 ```powershell
-npm run download:history -- 1500 BTCUSDT 1
+npm run download:history -- 1500 BTC-USD 1
 ```
 
-Arguments: `[totalCandles] [symbol] [interval]`. The script paginates Bybit
-klines, upserts them, and recomputes all indicators.
+Arguments: `[totalCandles] [symbol] [interval]`. The script paginates Coinbase
+klines (up to 350 per request), upserts them, and recomputes all indicators.
 
 ### Python predictor
 
@@ -119,11 +119,10 @@ process falls back to an equivalent in-process heuristic, so trading continues.
 | `NODE_ENV` | `development` | Environment mode |
 | `PORT` | `4000` | HTTP port |
 | `DATABASE_URL` | `file:./dev.db` | SQLite file (relative to `prisma/`) |
-| `BYBIT_BASE_URL` | `https://api.bybit.com` | Public market data base URL |
-| `BYBIT_CATEGORY` | `linear` | Bybit category |
-| `BYBIT_TIMEOUT_MS` | `15000` | HTTP timeout |
-| `BYBIT_RETRIES` | `3` | Retry attempts for 5xx/network errors |
-| `SYMBOL` | `BTCUSDT` | Default symbol |
+| `COINBASE_BASE_URL` | `https://api.coinbase.com` | Public market data base URL |
+| `COINBASE_TIMEOUT_MS` | `15000` | HTTP timeout |
+| `COINBASE_RETRIES` | `3` | Retry attempts for 5xx/network errors |
+| `SYMBOL` | `BTC-USD` | Default Coinbase product id (`BTCUSDT` is normalized to `BTC-USD`) |
 | `INTERVAL` | `1` | Candle interval in minutes |
 | `STARTING_BALANCE` | `80` | Wallet seed balance (USDT) |
 | `TRADE_SIZE` | `10` | Simulated notional per trade |
@@ -192,7 +191,7 @@ Invoke-RestMethod http://localhost:4000/dashboard
 
 Invoke-RestMethod http://localhost:4000/backtest -Method Post `
   -ContentType 'application/json' `
-  -Body '{"symbol":"BTCUSDT","interval":"1","limit":1000}'
+  -Body '{"symbol":"BTC-USD","interval":"1","limit":1000}'
 
 Invoke-RestMethod http://localhost:4000/settings -Method Put `
   -ContentType 'application/json' `
@@ -220,7 +219,7 @@ strategy entry/exit rules, and wallet math including fees.
 
 - No authenticated exchange client, API key, or order endpoint exists.
 - All trades are rows in the local `trades` table with simulated fills.
-- The only outbound calls are public Bybit kline requests.
+- The only outbound calls are public Coinbase candle requests.
 - The Python predictor receives features only, never credentials.
 - `PAPER TRADING ONLY` is logged at boot and exposed by `/health`.
 
